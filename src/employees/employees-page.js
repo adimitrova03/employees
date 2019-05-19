@@ -50,10 +50,15 @@ class Employees extends Component {
         this.checkSameProjects(this.state.data);
     }
 
+    /**
+     * Find the unique couples who worked on same projects
+     *
+     * @param employees
+     */
     checkSameProjects = (employees) => {
-        var couples = [];
+        let couples = [];
 
-        const uniqueEntriesOfEmployees = [... new Set(employees.map(employee => employee.EmpID))];
+        const uniqueEntriesOfEmployees = [...new Set(employees.map(employee => employee.EmpID))];
 
         for (let i = 0; i < uniqueEntriesOfEmployees.length - 1; i++) {
             for (let j = i + 1; j < uniqueEntriesOfEmployees.length; j++) {
@@ -65,45 +70,52 @@ class Employees extends Component {
             }
         }
 
-        couples.map(uniqueCouple => {
-            employees.map(employeeEntry => {
+        // Map the unique couple to find out if the workers worked on the same project
+        couples.forEach(uniqueCouple => {
+            employees.forEach(employeeEntry => {
+
                 if (employeeEntry.EmpID === uniqueCouple.couple[0] || employeeEntry.EmpID === uniqueCouple.couple[1]) {
-                    employeeEntry.DateFrom = moment(employeeEntry.DateFrom).format('MM/DD/YYYY')
-                    employeeEntry.DateTo = employeeEntry.DateTo === 'NULL' ? employeeEntry.DateTo = moment().format('MM/DD/YYYY') : moment(employeeEntry.DateTo).format('MM/DD/YYYY')
+
+                    employeeEntry.DateFrom = moment(employeeEntry.DateFrom).format('MM/DD/YYYY');
+                    employeeEntry.DateTo = employeeEntry.DateTo === 'NULL' ? employeeEntry.DateTo = moment().format('MM/DD/YYYY') : moment(employeeEntry.DateTo).format('MM/DD/YYYY');
                     if (!uniqueCouple.projects[employeeEntry.ProjectID]) {
-                        uniqueCouple.projects[employeeEntry.ProjectID] = [employeeEntry]
+                        uniqueCouple.projects[employeeEntry.ProjectID] = [employeeEntry];
                     } else {
-                        uniqueCouple.projects[employeeEntry.ProjectID].push(employeeEntry)
+                        uniqueCouple.projects[employeeEntry.ProjectID].push(employeeEntry);
                     }
                 }
             })
-        })
+        });
 
-        couples.map(uniqueCouple => {
-            Object.keys(uniqueCouple.projects).map(project => {
+        couples.forEach(uniqueCouple => {
+            Object.keys(uniqueCouple.projects).forEach(project => {
                 if (uniqueCouple.projects[project].length > 1) {
                     let firstEmployee = uniqueCouple.projects[project][0];
                     let secondEmployee = uniqueCouple.projects[project][1];
 
-                    let start = moment(firstEmployee.DateFrom) > moment(secondEmployee.DateFrom) ? moment(firstEmployee.DateFrom) : moment(secondEmployee.DateFrom)
-                    let end = moment(firstEmployee.DateTo) > moment(secondEmployee.DateTo) ? moment(secondEmployee.DateTo) : moment(firstEmployee.DateTo)
+                    let start = moment(firstEmployee.DateFrom) > moment(secondEmployee.DateFrom) ? moment(firstEmployee.DateFrom) : moment(secondEmployee.DateFrom);
+                    let end = moment(firstEmployee.DateTo) > moment(secondEmployee.DateTo) ? moment(secondEmployee.DateTo) : moment(firstEmployee.DateTo);
                     let period = (moment(end) - moment(start)) / 1000 / 60 / 60 / 24;
                     if (period > 0) {
                         uniqueCouple.timeSpentTogether += Math.round(period)
                     }
+                } else {
+                    delete uniqueCouple.projects[project];
                 }
             })
-        })
+        });
 
-        var maxValue = 0;
-        var maxCouple;
-        couples.map(couple => {
+        let maxValue = 0;
+        let maxCouple;
+
+        couples.forEach(couple => {
             if (couple.timeSpentTogether > 0 && couple.timeSpentTogether > maxValue) {
                 maxValue = couple.timeSpentTogether;
                 maxCouple = couple;
             }
-        })
+        });
 
+        console.log('Couple that worked longest together:', maxCouple);
         this.setState({highestCouple: maxCouple})
     }
 
